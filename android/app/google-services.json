@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "780616787467",
+    "project_id": "petcura-app",
+    "storage_bucket": "petcura-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:780616787467:android:45ae247ebdbeaa9516c90e",
+        "android_client_info": {
+          "package_name": "petcura.com.utsuas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnbbWd5cqbNDouzs_M2jxy_fTXWTsWjWw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,1 @@
+{"flutter":{"platforms":{"android":{"default":{"projectId":"petcura-app","appId":"1:780616787467:android:45ae247ebdbeaa9516c90e","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"petcura-app","configurations":{"android":"1:780616787467:android:45ae247ebdbeaa9516c90e","ios":"1:780616787467:ios:073d6bfbd5332f3f16c90e"}}}}}}
