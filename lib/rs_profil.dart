@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:utsuas/booking1.dart';
 
 class ClinicProfilePage extends StatefulWidget {
   final String clinicId;
@@ -24,20 +25,17 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
 
   Future<void> fetchClinicData() async {
     try {
-      // Ambil data klinik
       var clinicDoc = await FirebaseFirestore.instance
           .collection('clinics')
           .doc(widget.clinicId)
           .get();
 
-      // Ambil services subcollection
       var servicesSnapshot = await FirebaseFirestore.instance
           .collection('clinics')
           .doc(widget.clinicId)
           .collection('services')
           .get();
 
-      // Ambil doctors subcollection
       var doctorsSnapshot = await FirebaseFirestore.instance
           .collection('clinics')
           .doc(widget.clinicId)
@@ -51,7 +49,6 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
         isLoading = false;
       });
     } catch (e) {
-      // Handle error
       print("Error fetching clinic data: $e");
       setState(() {
         isLoading = false;
@@ -77,6 +74,7 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
     }
 
     final clinic = clinicData.data() as Map<String, dynamic>;
+    final limitedDoctors = doctors.take(3).toList();
 
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.white,
@@ -94,18 +92,19 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Image from clinic data
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Image.network(
-                  clinic['imageUrl'] ?? 'https://via.placeholder.com/400x200',
+                  clinic['image_url'] ?? 'https://via.placeholder.com/400x200',
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Text('Gagal memuat gambar');
+                  },
                 ),
               ),
               const SizedBox(height: 20),
-              // Clinic Info
               Text(
                 clinic['name'] ?? 'No Name',
                 style: TextStyle(
@@ -136,7 +135,6 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
                 ],
               ),
               const SizedBox(height: 20),
-              // Operational Hours
               Row(
                 children: [
                   Icon(Icons.access_time, size: 20, color: Colors.brown),
@@ -144,20 +142,19 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
                   const Text('Jam Operasional', style: TextStyle(fontSize: 16)),
                   const Spacer(),
                   Text(
-                    'Buka',
+                    clinic['Status'] ?? 'Buka',
                     style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
               const SizedBox(height: 4),
               Text(
-                clinic['openTime'] ?? '-',
+                '${clinic['openTime'] ?? '-'} - ${clinic['closeTime'] ?? '-'}',
                 style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 20),
               const Divider(),
 
-              // Services (dari Firebase)
               Text(
                 'Layanan',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDarkMode ? Colors.white : Colors.brown),
@@ -175,42 +172,38 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
                 itemCount: services.length,
                 itemBuilder: (context, index) {
                   final service = services[index].data() as Map<String, dynamic>;
-                  final iconData = getIconFromString(service['icon']);
-                  return serviceItem(iconData, service['name'] ?? 'No Name', isDarkMode);
+                  final name = service['name'] ?? '';
+                  final iconData = getIconFromServiceName(name);
+                  return serviceItem(iconData, name, isDarkMode);
                 },
               ),
               const SizedBox(height: 20),
 
-              // Doctors (dari Firebase)
               Text(
                 'Dokter',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDarkMode ? Colors.white : Colors.brown),
               ),
               const SizedBox(height: 12),
-              ...doctors.map((doc) {
+              ...limitedDoctors.map((doc) {
                 final doctor = doc.data() as Map<String, dynamic>;
                 return doctorItem(doctor['name'] ?? 'No Name', isDarkMode);
               }).toList(),
-              const SizedBox(height: 20),
-
-              const Divider(),
-
-              // Location section tetap static atau bisa diubah dinamis jika ada data latitude/longitude
-              Text(
-                'Lokasi',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDarkMode ? Colors.white : Colors.brown),
-              ),
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  'https://maps.googleapis.com/maps/api/staticmap?center=-6.1754,106.8272&zoom=15&size=600x300&markers=color:red%7Clabel:H%7C-6.1754,106.8272&key=YOUR_API_KEY',
-                  height: 150,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AllDoctorsPage(clinicId: widget.clinicId, doctors: doctors),
+                      ),
+                    );
+                  },
+                  child: const Text('Lihat Semua', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.brown)),
                 ),
               ),
               const SizedBox(height: 20),
+              const Divider(),
             ],
           ),
         ),
@@ -229,7 +222,10 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
             onPressed: () {
-              // Navigasi ke halaman booking (bisa kirim clinicId jika perlu)
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => BookingPage()),
+              );
             },
             child: const Text(
               'Booking',
@@ -245,20 +241,15 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
     );
   }
 
-  // Fungsi untuk mapping string icon name ke IconData Flutter
-  IconData getIconFromString(String? iconName) {
-    switch (iconName) {
-      case 'vaccines':
-        return Icons.vaccines;
-      case 'medical_services':
-        return Icons.medical_services;
-      case 'favorite':
-        return Icons.favorite;
-      case 'add':
-        return Icons.add;
-      default:
-        return Icons.miscellaneous_services;
-    }
+  IconData getIconFromServiceName(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('vaksin')) return Icons.vaccines;
+    if (lower.contains('konsultasi')) return Icons.chat;
+    if (lower.contains('steril')) return Icons.pets;
+    if (lower.contains('check') || lower.contains('periksa')) return Icons.monitor_heart;
+    if (lower.contains('darurat')) return Icons.emergency;
+    if (lower.contains('operasi')) return Icons.health_and_safety;
+    return Icons.miscellaneous_services;
   }
 
   Widget serviceItem(IconData icon, String title, bool isDarkMode) {
@@ -271,7 +262,7 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: isDarkMode ? Colors.white : Colors.brown),
+            Icon(icon, color: Colors.red),
             const SizedBox(width: 8),
             Text(title, style: TextStyle(fontSize: 16, color: isDarkMode ? Colors.white : Colors.black)),
           ],
@@ -294,6 +285,52 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
           SizedBox(width: 4),
           Text('4.5'),
         ],
+      ),
+    );
+  }
+}
+
+class AllDoctorsPage extends StatelessWidget {
+  final String clinicId;
+  final List<DocumentSnapshot> doctors;
+
+  const AllDoctorsPage({Key? key, required this.clinicId, required this.doctors}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Semua Dokter"),
+        backgroundColor: isDarkMode ? Colors.black : Colors.brown,
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: doctors.length,
+        itemBuilder: (context, index) {
+          final doctor = doctors[index].data() as Map<String, dynamic>;
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundColor: isDarkMode ? Colors.grey.shade800 : Colors.grey[300],
+              child: Icon(Icons.person, color: isDarkMode ? Colors.white : Colors.grey),
+            ),
+            title: Text(
+              doctor['name'] ?? 'No Name',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+            subtitle: Row(
+              children: const [
+                Icon(Icons.star, color: Colors.orange, size: 16),
+                SizedBox(width: 4),
+                Text('4.5'),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

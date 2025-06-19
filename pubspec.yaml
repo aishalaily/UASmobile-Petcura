@@ -39,7 +39,6 @@ dependencies:
   firebase_core: ^2.25.4
   carousel_slider: ^4.2.1
   provider: ^6.1.1
-  google_maps_flutter: ^2.5.0
   firebase_auth: ^4.17.0
   cloud_firestore: ^4.13.1
   firebase_storage: ^11.0.11
@@ -48,6 +47,7 @@ dependencies:
   permission_handler: ^11.0.1
   image_picker: ^1.0.7
   intl: ^0.18.0
+  google_maps_flutter: ^2.6.0
 
 
 

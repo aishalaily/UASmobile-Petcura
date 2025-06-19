@@ -31,7 +31,6 @@ class SettingsPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // Toggle Theme
             ListTile(
               leading: Icon(
                 Icons.brightness_6,
@@ -51,7 +50,6 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
 
-            // Notification Settings
             ListTile(
               leading: Icon(
                 Icons.notifications,
@@ -66,7 +64,7 @@ class SettingsPage extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const Notifikasi()),
+                  MaterialPageRoute(builder: (_) => const BookingNotificationPage()),
                 );
               },
             ),

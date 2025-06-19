@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:utsuas/detail_riwayat.dart';
 import 'package:utsuas/booking1.dart';
@@ -21,31 +19,57 @@ class _MedicalHistoryPageState extends State<MedicalHistoryPage> {
   @override
   void initState() {
     super.initState();
-    fetchMedicalHistory();
+    loadDummyData(); // Ganti dengan data dummy
+    // fetchMedicalHistory(); // Nonaktifkan sementara
   }
 
-  Future<void> fetchMedicalHistory() async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-
-    if (userId == null) return;
-
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .collection('medical_history')
-        .orderBy('date', descending: true)
-        .get();
-
-    setState(() {
-      medicalRecords = snapshot.docs.map((doc) => doc.data()).toList();
-    });
+  // Ini contoh data dummy
+  void loadDummyData() {
+    medicalRecords = [
+      {
+        "title": "Vaksin Rabies",
+        "doctor": "Drh. Ani",
+        "date": "2024-05-12",
+        "category": "Vaksinasi",
+      },
+      {
+        "title": "Operasi Luka",
+        "doctor": "Drh. Budi",
+        "date": "2024-04-30",
+        "category": "Operasi",
+      },
+      {
+        "title": "Check Up Tahunan",
+        "doctor": "Drh. Clara",
+        "date": "2024-03-21",
+        "category": "Check Up",
+      },
+    ];
+    setState(() {});
   }
+
+  // Future<void> fetchMedicalHistory() async {
+  //   final userId = FirebaseAuth.instance.currentUser?.uid;
+  //   if (userId == null) return;
+  //   final snapshot = await FirebaseFirestore.instance
+  //       .collection('users')
+  //       .doc(userId)
+  //       .collection('medical_history')
+  //       .orderBy('date', descending: true)
+  //       .get();
+  //
+  //   setState(() {
+  //     medicalRecords = snapshot.docs.map((doc) => doc.data()).toList();
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
     final filteredRecords = selectedCategory == "Semua"
         ? medicalRecords
-        : medicalRecords.where((record) => record["category"] == selectedCategory).toList();
+        : medicalRecords
+            .where((record) => record["category"] == selectedCategory)
+            .toList();
 
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
@@ -68,17 +92,21 @@ class _MedicalHistoryPageState extends State<MedicalHistoryPage> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: ["Semua", "Vaksinasi", "Operasi", "Check Up"].map((category) {
+                children: ["Semua", "Vaksinasi", "Operasi", "Check Up"]
+                    .map((category) {
                   final isSelected = category == selectedCategory;
                   return GestureDetector(
                     onTap: () => setState(() => selectedCategory = category),
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFFD0A67D)
-                            : (isDarkMode ? Colors.grey[800] : Colors.grey[300]),
+                            : (isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.grey[300]),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -100,7 +128,9 @@ class _MedicalHistoryPageState extends State<MedicalHistoryPage> {
                   ? Center(
                       child: Text(
                         "Tidak ada riwayat.",
-                        style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+                        style: TextStyle(
+                            color:
+                                isDarkMode ? Colors.white : Colors.black),
                       ),
                     )
                   : ListView.builder(
@@ -112,7 +142,8 @@ class _MedicalHistoryPageState extends State<MedicalHistoryPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => DetailMedicalRecordPage(record),
+                                builder: (_) =>
+                                    DetailMedicalRecordPage(record),
                               ),
                             );
                           },
@@ -150,25 +181,27 @@ class _MedicalHistoryPageState extends State<MedicalHistoryPage> {
               );
               break;
             case 2:
-              // Do nothing, already here
               break;
             case 3:
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const OwnerProfilePage()),
+                MaterialPageRoute(
+                    builder: (context) => const OwnerProfilePage()),
               );
               break;
           }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.house), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Booking'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
-          BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: 'Profil'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today), label: 'Booking'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.history), label: 'Riwayat'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle), label: 'Profil'),
         ],
       ),
     );
-
   }
 
   Widget _medicalCard({
@@ -188,15 +221,29 @@ class _MedicalHistoryPageState extends State<MedicalHistoryPage> {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 30, color: isDarkMode ? Colors.white : Colors.brown),
+          Icon(icon,
+              size: 30, color: isDarkMode ? Colors.white : Colors.brown),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: isDarkMode ? Colors.white : Colors.black)),
-                Text(doctor, style: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black87, fontSize: 13)),
-                Text(date, style: TextStyle(color: isDarkMode ? Colors.white54 : Colors.black54, fontSize: 12)),
+                Text(title,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black)),
+                Text(doctor,
+                    style: TextStyle(
+                        color: isDarkMode
+                            ? Colors.white70
+                            : Colors.black87,
+                        fontSize: 13)),
+                Text(date,
+                    style: TextStyle(
+                        color: isDarkMode
+                            ? Colors.white54
+                            : Colors.black54,
+                        fontSize: 12)),
               ],
             ),
           ),

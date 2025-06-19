@@ -17,7 +17,6 @@ class Home extends StatelessWidget {
     final theme = Provider.of<ThemeProvider>(context);
     final isLightMode = theme.themeMode == ThemeMode.light;
 
-    // Referensi dokumen rshp_unair
     final DocumentReference clinicRef = FirebaseFirestore.instance.collection('clinics').doc('rshp_unair');
 
     return Scaffold(
