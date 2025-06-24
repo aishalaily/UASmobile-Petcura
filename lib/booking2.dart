@@ -74,7 +74,7 @@ class _Booking2PageState extends State<Booking2Page> {
       appBar: AppBar(
         backgroundColor: theme.appBarTheme.backgroundColor,
         centerTitle: true,
-        title: Text("Data Hewan", style: TextStyle(color: colorScheme.onPrimary)),
+        title: Text("Data Hewan", style: TextStyle(color: Colors.black)),
         iconTheme: IconThemeData(color: colorScheme.onPrimary),
       ),
       body: Padding(
@@ -138,7 +138,7 @@ class _Booking2PageState extends State<Booking2Page> {
                               selectedService: widget.selectedService,
                               doctorOnDuty: widget.doctorOnDuty,
                               servicePrice: widget.servicePrice,
-                              selectedDate: widget.selectedDate,  // Ini penting supaya tanggalnya diteruskan
+                              selectedDate: widget.selectedDate,  
                             ),
                           ),
                         );

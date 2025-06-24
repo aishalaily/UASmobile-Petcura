@@ -46,6 +46,14 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
     final colorScheme = theme.colorScheme;
     final isDarkMode = theme.brightness == Brightness.dark;
 
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId == null) {
+      return const Scaffold(
+        body: Center(child: Text('User belum login')),
+      );
+    }
+
     return Scaffold(
       backgroundColor: isDarkMode ? colorScheme.background : const Color(0xFF6D4C41),
       body: Column(
@@ -102,7 +110,12 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
                   }),
                   const Divider(),
                   buildMenuItem(context, Icons.logout, 'Keluar', () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                    FirebaseAuth.instance.signOut();
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
                   }, isLogout: true),
                 ],
               ),
@@ -124,7 +137,9 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => BookingPage()));
               break;
             case 2:
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MedicalHistoryPage()));
+              Navigator.pushReplacement(context, MaterialPageRoute(
+                builder: (_) => MedicalHistoryPage(userId: userId),
+              ));
               break;
             case 3:
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OwnerProfilePage()));

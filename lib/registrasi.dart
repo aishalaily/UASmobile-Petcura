@@ -62,8 +62,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'name': name,
         'email': email,
         'created_at': Timestamp.now(),
-        'phone_numbers': [], // array kosong default
-        'addresses': [],     // array kosong default
+        'phone_numbers': [], 
+        'addresses': [],   
         'main_phone': '',
         'main_address': '',
       });
@@ -73,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SnackBar(content: Text('Registrasi berhasil! Silakan login')),
       );
 
-      Navigator.pop(context); // Kembali ke login screen
+      Navigator.pop(context); 
     } on FirebaseAuthException catch (e) {
       String message = 'Gagal daftar';
       if (e.code == 'email-already-in-use') {
@@ -111,7 +111,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Icon PetCura
               Icon(
                 FontAwesomeIcons.paw,
                 size: 48.0,
@@ -141,7 +140,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Nama Lengkap
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
@@ -158,7 +156,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Email
               TextField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -176,7 +173,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Password
               TextField(
                 controller: passwordController,
                 obscureText: true,
@@ -194,7 +190,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Konfirmasi Password
               TextField(
                 controller: confirmPasswordController,
                 obscureText: true,
@@ -212,7 +207,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Tombol Daftar
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -235,7 +229,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Redirect ke login
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

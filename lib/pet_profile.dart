@@ -101,7 +101,6 @@ class _PetProfilePageState extends State<PetProfilePage> {
     );
 
     if (result != null) {
-      // Update Firestore
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         await FirebaseFirestore.instance
@@ -118,7 +117,6 @@ class _PetProfilePageState extends State<PetProfilePage> {
           'birthday': result['birthday'],
         });
 
-        // Refresh UI
         setState(() {
           petName = result['name'];
           petType = result['type'];

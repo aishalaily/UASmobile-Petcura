@@ -10,7 +10,6 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Theme light mode
   ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,

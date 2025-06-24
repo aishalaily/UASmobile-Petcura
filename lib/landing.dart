@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:utsuas/login.dart'; // ganti sesuai path login kamu
+import 'package:utsuas/login.dart';
 import 'package:utsuas/theme_provider.dart';
 
 class SplashScreen extends StatefulWidget {

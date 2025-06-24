@@ -4,7 +4,7 @@ import 'package:utsuas/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // Tambahkan package intl untuk formatting tanggal
+import 'package:intl/intl.dart';
 
 class ConfirmationPage extends StatelessWidget {
   final String ownerName;
@@ -16,7 +16,7 @@ class ConfirmationPage extends StatelessWidget {
   final String selectedService;
   final String doctorOnDuty;
   final double servicePrice;
-  final DateTime selectedDate; // Tambahkan parameter selectedDate
+  final DateTime selectedDate;
 
   const ConfirmationPage({
     Key? key,
@@ -29,8 +29,32 @@ class ConfirmationPage extends StatelessWidget {
     required this.selectedService,
     required this.doctorOnDuty,
     required this.servicePrice,
-    required this.selectedDate, // wajib
+    required this.selectedDate,
   }) : super(key: key);
+
+  Widget buildInfoRow(IconData icon, String label, String value, Color iconColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: iconColor, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(fontSize: 16),
+                children: [
+                  TextSpan(text: "$label: ", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+                  TextSpan(text: value, style: const TextStyle(color: Colors.black87)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +64,6 @@ class ConfirmationPage extends StatelessWidget {
         : themeProvider.lightTheme;
 
     final colorScheme = theme.colorScheme;
-
-    // Format tanggal yang dipilih agar tampil user-friendly
     final formattedDate = DateFormat('EEEE, dd MMMM yyyy').format(selectedDate);
 
     return Scaffold(
@@ -54,44 +76,47 @@ class ConfirmationPage extends StatelessWidget {
           icon: Icon(Icons.arrow_back, color: colorScheme.onPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text("Konfirmasi Pemesanan", style: TextStyle(color: colorScheme.onPrimary)),
+        title: Text("Konfirmasi Pemesanan", style: TextStyle(color: Colors.black)),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Informasi Pemilik
-              Text("Nama Pemilik: $ownerName", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
-              Text("Nomor HP: $ownerPhone", style: TextStyle(fontSize: 16, color: colorScheme.onSurfaceVariant)),
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      buildInfoRow(Icons.person, "Nama Pemilik", ownerName, colorScheme.primary),
+                      buildInfoRow(Icons.phone, "Nomor HP", ownerPhone, colorScheme.primary),
+                      const SizedBox(height: 12),
+                      buildInfoRow(Icons.pets, "Nama Hewan", petName, colorScheme.secondary),
+                      buildInfoRow(Icons.cake, "Usia Hewan", "$petAge tahun", colorScheme.secondary),
+                      buildInfoRow(Icons.info_outline, "Ras Hewan", petBreed ?? 'Tidak ada', colorScheme.secondary),
+                      const SizedBox(height: 12),
+                      buildInfoRow(Icons.date_range, "Tanggal", formattedDate, colorScheme.tertiary),
+                      buildInfoRow(Icons.schedule, "Jadwal", selectedSchedule, colorScheme.tertiary),
+                      buildInfoRow(Icons.medical_services, "Layanan", selectedService, colorScheme.tertiary),
+                      buildInfoRow(Icons.person_pin, "Dokter Jaga", "Dr. $doctorOnDuty", colorScheme.tertiary),
+                      const SizedBox(height: 12),
+                      buildInfoRow(Icons.attach_money, "Harga Layanan", "Rp ${servicePrice.toStringAsFixed(2)}", colorScheme.primary),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 24),
-
-              // Informasi Hewan
-              Text("Nama Hewan: $petName", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
-              Text("Usia Hewan: $petAge tahun", style: TextStyle(fontSize: 16, color: colorScheme.onSurfaceVariant)),
-              Text("Ras Hewan: ${petBreed ?? 'Tidak ada'}", style: TextStyle(fontSize: 16, color: colorScheme.onSurfaceVariant)),
-              const SizedBox(height: 24),
-
-              // Informasi Layanan
-              Text("Tanggal: $formattedDate", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
-              Text("Jadwal: $selectedSchedule", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
-              Text("Layanan: $selectedService", style: TextStyle(fontSize: 16, color: colorScheme.onSurfaceVariant)),
-              Text("Dokter Jaga: Dr. $doctorOnDuty", style: TextStyle(fontSize: 16, color: colorScheme.onSurfaceVariant)),
-              const SizedBox(height: 24),
-
-              // Informasi Harga Layanan
-              Text("Harga Layanan: Rp ${servicePrice.toStringAsFixed(2)}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
-              const SizedBox(height: 24),
-
-              // Button Konfirmasi
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text("Konfirmasi Pemesanan"),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorScheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () async {
                     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -100,7 +125,6 @@ class ConfirmationPage extends StatelessWidget {
                     try {
                       final firestore = FirebaseFirestore.instance;
 
-                      // Simpan data booking ke koleksi 'bookings'
                       final bookingRef = await firestore.collection('bookings').add({
                         'userId': uid,
                         'ownerName': ownerName,
@@ -109,7 +133,7 @@ class ConfirmationPage extends StatelessWidget {
                         'petAge': petAge,
                         'petBreed': petBreed,
                         'selectedSchedule': selectedSchedule,
-                        'selectedDate': selectedDate.toIso8601String(), // Simpan tanggal juga
+                        'selectedDate': selectedDate.toIso8601String(),
                         'selectedService': selectedService,
                         'doctorOnDuty': doctorOnDuty,
                         'servicePrice': servicePrice,
@@ -117,7 +141,6 @@ class ConfirmationPage extends StatelessWidget {
                         'timestamp': FieldValue.serverTimestamp(),
                       });
 
-                      // Tambahkan reminder di users/{userId}/reminders
                       final reminderRef = firestore
                           .collection('users')
                           .doc(uid)
@@ -145,11 +168,6 @@ class ConfirmationPage extends StatelessWidget {
                       );
                     }
                   },
-
-                  child: Text(
-                    "Konfirmasi Pemesanan",
-                    style: TextStyle(color: colorScheme.onPrimary, fontSize: 16),
-                  ),
                 ),
               ),
             ],

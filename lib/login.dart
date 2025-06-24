@@ -4,7 +4,7 @@ import 'package:utsuas/home.dart';
 import 'package:utsuas/registrasi.dart';
 import 'package:utsuas/theme_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';  // Import Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -38,7 +38,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
-      // Login berhasil, pindah ke Home
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const Home()),
@@ -109,7 +108,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Email TextField
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(
@@ -123,7 +121,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Password TextField
               TextField(
                 controller: passwordController,
                 obscureText: true,
@@ -140,7 +137,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
-                    // TODO: Lupa password
                   },
                   child: Text(
                     'Lupa password?',
@@ -150,7 +146,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
 
-              // Login Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -168,7 +163,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Register Redirect
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

@@ -8,6 +8,8 @@ import 'package:utsuas/rs_profil.dart';
 import 'package:utsuas/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:utsuas/detail_artikel.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});
@@ -16,13 +18,36 @@ class Home extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeProvider>(context);
     final isLightMode = theme.themeMode == ThemeMode.light;
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final clinicRef = FirebaseFirestore.instance.collection('clinics').doc('rshp_unair');
 
-    final DocumentReference clinicRef = FirebaseFirestore.instance.collection('clinics').doc('rshp_unair');
+    final List<Map<String, String>> edukasiList = [
+    {
+      'title': 'Cara Merawat Anjing Saat Musim Hujan',
+      'imageUrl': 'https://i.pinimg.com/736x/ff/01/33/ff013304925299204f57d9ee0ca6ee98.jpg',
+      'content':
+          'Saat musim hujan, jaga anjing Anda tetap kering dan hangat. Gunakan jas hujan khusus hewan untuk melindungi dari air dan dingin. Hindari berjalan di genangan air karena bisa membawa penyakit seperti leptospirosis. Setelah berjalan-jalan, segera keringkan bulunya, terutama bagian telapak kaki dan perut. Pastikan tempat tidurnya tetap kering dan hangat untuk mencegah flu atau infeksi kulit.'
+    },
+    {
+      'title': 'Tips Memandikan Kucing yang Takut Air',
+      'imageUrl': 'https://i.pinimg.com/736x/ca/55/c6/ca55c66da5ef1f1e06b47e4350c02553.jpg',
+      'content':
+          'Memandikan kucing yang takut air memerlukan kesabaran. Gunakan air hangat dan suara lembut untuk membuatnya merasa tenang. Mandikan di bak kecil atau wastafel, bukan pancuran. Gunakan sampo khusus kucing dan hindari wajah. Jika terlalu takut, gunakan lap basah atau dry shampoo sebagai alternatif. Pastikan ruangan hangat dan keringkan bulu dengan handuk lembut secara perlahan.'
+    },
+    {
+      'title': 'Vaksin Penting untuk Hewan Peliharaan',
+      'imageUrl': 'https://i.pinimg.com/736x/81/9c/21/819c21993589d5755e1899eb57ae934f.jpg',
+      'content':
+          'Vaksinasi adalah perlindungan utama bagi hewan peliharaan dari penyakit serius seperti rabies, parvovirus, distemper, dan leptospirosis. Anak anjing dan kucing memerlukan rangkaian vaksin sejak usia 6–8 minggu. Vaksinasi rutin membantu memperkuat sistem kekebalan tubuh dan mencegah penyebaran penyakit. Konsultasikan dengan dokter hewan untuk membuat jadwal vaksin yang sesuai dengan jenis dan usia hewan Anda.'
+    },
+  ];
+ 
+    PageController edukasiController = PageController();
+    int currentArticle = 0;
 
     return Scaffold(
       backgroundColor: isLightMode ? Colors.white : Colors.black,
       appBar: AppBar(
-        toolbarHeight: 60,
         backgroundColor: isLightMode ? Colors.white : Colors.black,
         elevation: 0,
         title: Row(
@@ -41,57 +66,58 @@ class Home extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.settings, color: isLightMode ? Color(0xFF6D4C41) : Colors.white),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
-                );
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
               },
             ),
           ],
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Search Bar (bisa ditambah fungsi nanti)
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: isLightMode ? Colors.grey.shade200 : Colors.grey.shade700,
-                borderRadius: BorderRadius.circular(12),
+            if (userId != null)
+              FutureBuilder<QuerySnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(userId)
+                    .collection('reminders')
+                    .orderBy('date')
+                    .limit(1)
+                    .get(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return SizedBox();
+                  final reminder = snapshot.data!.docs.first.data() as Map<String, dynamic>;
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.alarm, color: Colors.orange),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text("Reminder: ${reminder['title']} - ${reminder['date']}"),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-              child: const TextField(
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: "Search...",
-                  icon: Icon(Icons.search),
-                ),
-              ),
-            ),
 
-            // Banner Slider (static dulu)
             const _BannerSlider(),
             const SizedBox(height: 20),
 
-            // Bagian data RSHP Unair dari Firestore
             FutureBuilder<DocumentSnapshot>(
               future: clinicRef.get(),
               builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                }
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.hasData || !snapshot.data!.exists) {
-                  return const Text('Data klinik tidak ditemukan');
-                }
-
-                final clinicData = snapshot.data!.data() as Map<String, dynamic>;
+                if (snapshot.connectionState == ConnectionState.waiting) return const CircularProgressIndicator();
+                if (!snapshot.hasData || !snapshot.data!.exists) return const Text('Data klinik tidak ditemukan');
+                final data = snapshot.data!.data() as Map<String, dynamic>;
 
                 return Container(
                   padding: const EdgeInsets.all(16),
@@ -102,56 +128,34 @@ class Home extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Gambar RS
-                      if (clinicData['imageUrl'] != null && clinicData['imageUrl'].isNotEmpty)
+                      if (data['imageUrl'] != null)
                         ClipRRect(
                           borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            clinicData['imageUrl'],
-                            height: 180,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
+                          child: Image.network(data['imageUrl'], height: 180, width: double.infinity, fit: BoxFit.cover),
                         ),
-
-                      const SizedBox(height: 12),
-
-                      Text(
-                        clinicData['name'] ?? 'RS Hewan',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(clinicData['address'] ?? '-'),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(Icons.phone, size: 18, color: Colors.brown),
-                          const SizedBox(width: 6),
-                          Text(clinicData['phone'] ?? '-'),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-
-                      Row(
-                        children: [
-                          const Icon(Icons.access_time, size: 18, color: Colors.brown),
-                          const SizedBox(width: 6),
-                          Text('Jam Operasional: '),
-                          Text(
-                            '${clinicData['openTime'] ?? '-'} - ${clinicData['closeTime'] ?? '-'}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const Spacer(),
-                          Text(
-                            clinicData['status'] ?? 'Buka',
+                      SizedBox(height: 12),
+                      Text(data['name'] ?? '', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 6),
+                      Text(data['address'] ?? ''),
+                      SizedBox(height: 8),
+                      Row(children: [
+                        const Icon(Icons.phone, size: 18, color: Colors.brown),
+                        SizedBox(width: 6),
+                        Text(data['phone'] ?? '-'),
+                      ]),
+                      SizedBox(height: 10),
+                      Row(children: [
+                        const Icon(Icons.access_time, size: 18, color: Colors.brown),
+                        SizedBox(width: 6),
+                        Text("Jam Operasional: "),
+                        Text('${data['openTime']} - ${data['closeTime']}',
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const Spacer(),
+                        Text(data['status'] ?? 'Buka',
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: clinicData['status'] == 'Buka' ? Colors.green : Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-
+                                color: data['status'] == 'Buka' ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold)),
+                      ]),
                       const SizedBox(height: 16),
                       Align(
                         alignment: Alignment.centerRight,
@@ -159,12 +163,12 @@ class Home extends StatelessWidget {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const ClinicProfilePage(clinicId: 'rshp_unair')),
+                              MaterialPageRoute(builder: (_) => const ClinicProfilePage(clinicId: 'rshp_unair')),
                             );
                           },
                           child: const Text('View Profile'),
                         ),
-                      ),
+                      )
                     ],
                   ),
                 );
@@ -172,7 +176,122 @@ class Home extends StatelessWidget {
             ),
 
             const SizedBox(height: 20),
-            // Bisa lanjut section lain disini, misalnya berita, reminder, dll.
+            Text("Artikel Edukasi", style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 220,
+              child: PageView.builder(
+                controller: edukasiController,
+                itemCount: edukasiList.length,
+                itemBuilder: (context, index) {
+                  final artikel = edukasiList[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ArticleDetailPage(
+                            title: artikel['title']!,
+                            imageUrl: artikel['imageUrl']!,
+                            content: artikel['content']!,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: isLightMode ? Colors.white : Colors.grey.shade700,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                            child: Image.network(
+                              artikel['imageUrl']!,
+                              height: 120,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Text(
+                              artikel['title']!,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.arrow_back_ios),
+                  onPressed: () => edukasiController.previousPage(duration: Duration(milliseconds: 300), curve: Curves.easeIn),
+                ),
+                IconButton(
+                  icon: Icon(Icons.arrow_forward_ios),
+                  onPressed: () => edukasiController.nextPage(duration: Duration(milliseconds: 300), curve: Curves.easeIn),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+            if (userId != null)
+              FutureBuilder<QuerySnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(userId)
+                    .collection('pets')
+                    .get(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return const SizedBox();
+                  final pets = snapshot.data!.docs;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Hewan Peliharaan", style: Theme.of(context).textTheme.titleMedium),
+                      SizedBox(height: 8),
+                      SizedBox(
+                        height: 110,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: pets.map((doc) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            return Container(
+                              width: 100,
+                              margin: const EdgeInsets.only(right: 12),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: isLightMode ? Colors.white : Colors.grey.shade700,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.pets, size: 40, color: Color(0xFFD0A67D)),
+                                  SizedBox(height: 6),
+                                  Text(data['name'] ?? '-', style: TextStyle(fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      )
+                    ],
+                  );
+                },
+              ),
           ],
         ),
       ),
@@ -184,28 +303,17 @@ class Home extends StatelessWidget {
         onTap: (index) {
           switch (index) {
             case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const Home()),
-              );
               break;
             case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => BookingPage()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => BookingPage()));
               break;
             case 2:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const MedicalHistoryPage()),
-              );
+              if (userId != null) {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MedicalHistoryPage(userId: userId)));
+              }
               break;
             case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const OwnerProfilePage()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OwnerProfilePage()));
               break;
           }
         },
@@ -219,7 +327,6 @@ class Home extends StatelessWidget {
     );
   }
 }
-
 
 class _BannerSlider extends StatefulWidget {
   const _BannerSlider({super.key});
@@ -236,8 +343,8 @@ class _BannerSliderState extends State<_BannerSlider> {
     'https://i.pinimg.com/736x/09/b6/a3/09b6a3bad33769252442474788338637.jpg',
     'https://d1csarkz8obe9u.cloudfront.net/posterpreviews/veterinary-hospital-advert-design-template-97e0360ce0df3851d2a9a54d6f66ced7_screen.jpg?ts=1698373242',
     'https://d1csarkz8obe9u.cloudfront.net/posterpreviews/dog-clinic-flyer-design-template-d0dcd2d5f80b4d082160798f94b0690a_screen.jpg?ts=1644976348',
-    'https://img.freepik.com/free-vector/flat-design-animal-sterilization-template_23-2150059352.jpg?t=st=1745394510~exp=1745398110~hmac=7c0bca5e2522bae7b6b2192955aa824c4806db0317a1ec63037edbc4cee191fe&w=1380',
-    'https://img.freepik.com/vector-gratis/cartel-servicio-cuidado-mascotas-dinamico-dibujado-mano_23-2149636393.jpg?t=st=1745394559~exp=1745398159~hmac=e10dd38893e4534008ae1bb6057c91fe0fc92c915697d9043bde6114fa4a9085&w=1380',
+    'https://img.freepik.com/free-vector/flat-design-animal-sterilization-template_23-2150059352.jpg',
+    'https://img.freepik.com/vector-gratis/cartel-servicio-cuidado-mascotas-dinamico-dibujado-mano_23-2149636393.jpg',
   ];
 
   @override
@@ -248,20 +355,10 @@ class _BannerSliderState extends State<_BannerSlider> {
 
   void _autoSlide() {
     if (_controller.hasClients) {
-      int nextPage = _currentPage + 1;
-      if (nextPage >= _imageUrls.length) nextPage = 0;
-
-      _controller.animateToPage(
-        nextPage,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-
-      setState(() {
-        _currentPage = nextPage;
-      });
-
-      Future.delayed(const Duration(seconds: 4), _autoSlide);
+      int nextPage = (_currentPage + 1) % _imageUrls.length;
+      _controller.animateToPage(nextPage, duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
+      setState(() => _currentPage = nextPage);
+      Future.delayed(Duration(seconds: 4), _autoSlide);
     }
   }
 
@@ -272,9 +369,6 @@ class _BannerSliderState extends State<_BannerSlider> {
       child: PageView.builder(
         controller: _controller,
         itemCount: _imageUrls.length,
-        onPageChanged: (index) {
-          setState(() => _currentPage = index);
-        },
         itemBuilder: (context, index) {
           return ClipRRect(
             borderRadius: BorderRadius.circular(12),

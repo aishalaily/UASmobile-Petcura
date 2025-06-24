@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:utsuas/booking1.dart';
 
 class ClinicProfilePage extends StatefulWidget {
@@ -16,6 +17,8 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
   List<DocumentSnapshot> services = [];
   List<DocumentSnapshot> doctors = [];
   bool isLoading = true;
+  LatLng? clinicLocation;
+  GoogleMapController? mapController;
 
   @override
   void initState() {
@@ -42,10 +45,15 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
           .collection('doctors')
           .get();
 
+      final data = clinicDoc.data() as Map<String, dynamic>;
+      double lat = data['latitude'] ?? 0.0;
+      double lng = data['longitude'] ?? 0.0;
+
       setState(() {
         clinicData = clinicDoc;
         services = servicesSnapshot.docs;
         doctors = doctorsSnapshot.docs;
+        clinicLocation = LatLng(lat, lng);
         isLoading = false;
       });
     } catch (e) {
@@ -134,6 +142,43 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
                   ),
                 ],
               ),
+              if (clinicLocation != null) ...[
+                const SizedBox(height: 20),
+                Text(
+                  'Lokasi Klinik',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.brown,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 200,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: clinicLocation!,
+                        zoom: 16,
+                      ),
+                      markers: {
+                        Marker(
+                          markerId: const MarkerId('clinic'),
+                          position: clinicLocation!,
+                          infoWindow: InfoWindow(title: clinic['name']),
+                        ),
+                      },
+                      onMapCreated: (controller) {
+                        mapController = controller;
+                      },
+                      myLocationEnabled: false,
+                      zoomControlsEnabled: false,
+                      liteModeEnabled: true,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               Row(
                 children: [
@@ -143,7 +188,7 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
                   const Spacer(),
                   Text(
                     clinic['Status'] ?? 'Buka',
-                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -186,7 +231,7 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
               const SizedBox(height: 12),
               ...limitedDoctors.map((doc) {
                 final doctor = doc.data() as Map<String, dynamic>;
-                return doctorItem(doctor['name'] ?? 'No Name', isDarkMode);
+                return doctorItem(doctor['name'] ?? 'No Name', doctor['photoURL'] ?? '', isDarkMode);
               }).toList(),
               Align(
                 alignment: Alignment.centerRight,
@@ -271,12 +316,15 @@ class _ClinicProfilePageState extends State<ClinicProfilePage> {
     );
   }
 
-  Widget doctorItem(String name, bool isDarkMode) {
+  Widget doctorItem(String name, String photoURL, bool isDarkMode) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
+        backgroundImage: photoURL.isNotEmpty ? NetworkImage(photoURL) : null,
         backgroundColor: isDarkMode ? Colors.grey.shade800 : Colors.grey[300],
-        child: Icon(Icons.person, color: isDarkMode ? Colors.white : Colors.grey),
+        child: photoURL.isEmpty
+            ? Icon(Icons.person, color: isDarkMode ? Colors.white : Colors.grey)
+            : null,
       ),
       title: Text(name, style: TextStyle(fontWeight: FontWeight.bold, color: isDarkMode ? Colors.white : Colors.black)),
       subtitle: Row(
@@ -310,10 +358,15 @@ class AllDoctorsPage extends StatelessWidget {
         itemCount: doctors.length,
         itemBuilder: (context, index) {
           final doctor = doctors[index].data() as Map<String, dynamic>;
+          final photoURL = doctor['photoURL'] ?? '';
+
           return ListTile(
             leading: CircleAvatar(
+              backgroundImage: photoURL.isNotEmpty ? NetworkImage(photoURL) : null,
               backgroundColor: isDarkMode ? Colors.grey.shade800 : Colors.grey[300],
-              child: Icon(Icons.person, color: isDarkMode ? Colors.white : Colors.grey),
+              child: photoURL.isEmpty
+                  ? Icon(Icons.person, color: isDarkMode ? Colors.white : Colors.grey)
+                  : null,
             ),
             title: Text(
               doctor['name'] ?? 'No Name',

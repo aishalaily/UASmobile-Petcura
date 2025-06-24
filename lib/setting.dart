@@ -11,7 +11,6 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mendapatkan tema yang sedang digunakan
     final theme = Provider.of<ThemeProvider>(context);
     final isLightMode = theme.themeMode == ThemeMode.light;
 
@@ -64,12 +63,11 @@ class SettingsPage extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const BookingNotificationPage()),
+                  MaterialPageRoute(builder: (_) => const Notifikasi()),
                 );
               },
             ),
 
-            // Account Settings
             ListTile(
               leading: Icon(
                 Icons.account_circle,
@@ -89,8 +87,6 @@ class SettingsPage extends StatelessWidget {
               },
             ),
 
-
-            // Help & Support
             ListTile(
               leading: Icon(
                 Icons.help_outline,

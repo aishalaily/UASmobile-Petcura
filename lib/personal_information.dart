@@ -117,7 +117,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                 MaterialPageRoute(builder: (_) => const EditInformationPage()),
                               );
                               if (result == true) {
-                                // reload data setelah edit berhasil
                                 fetchUserData();
                               }
                             },

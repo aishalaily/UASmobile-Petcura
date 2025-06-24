@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:utsuas/booking2.dart';
 import 'package:utsuas/setting.dart';
 import 'package:utsuas/booking1.dart';
@@ -9,7 +11,6 @@ import 'package:utsuas/riwayat_medis.dart';
 import 'package:utsuas/rs_profil.dart';
 import 'package:utsuas/home.dart';
 import 'package:utsuas/theme_provider.dart';
-import 'package:provider/provider.dart';
 
 class BookingPage extends StatefulWidget {
   @override
@@ -31,7 +32,7 @@ class _BookingPageState extends State<BookingPage> {
     "Layanan Darurat": 1000000.0,
   };
 
-   final Map<String, Map<String, String>> clinicSchedule = {
+  final Map<String, Map<String, String>> clinicSchedule = {
     "08:30 am": {
       "Senin": "Prof. Dr. I. Komang Wiarsa Sardjana, drh.",
       "Selasa": "Prof. Dr. Wiwik Misaco Yuniarti, drh., M.Kes.",
@@ -82,6 +83,7 @@ class _BookingPageState extends State<BookingPage> {
   Widget build(BuildContext context) {
     final theme = Provider.of<ThemeProvider>(context);
     final isLightMode = theme.themeMode == ThemeMode.light;
+    final userId = FirebaseAuth.instance.currentUser?.uid; // ✅ Fix userId here
 
     final bgColor = Theme.of(context).scaffoldBackgroundColor;
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
@@ -96,7 +98,7 @@ class _BookingPageState extends State<BookingPage> {
           icon: Icon(Icons.arrow_back, color: isLightMode ? Colors.black : Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text("Booking", style: TextStyle(color: Colors.white)),
+        title: Text("Booking", style: TextStyle(color: Colors.black)),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -105,10 +107,7 @@ class _BookingPageState extends State<BookingPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text("RS Medika Sejahtera",
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
-                      color: textColor)),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: textColor)),
               const SizedBox(height: 24),
 
               Row(
@@ -122,10 +121,7 @@ class _BookingPageState extends State<BookingPage> {
               const SizedBox(height: 24),
 
               Text("Pilih Layanan",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: textColor)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textColor)),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: selectedService.isNotEmpty ? selectedService : null,
@@ -162,10 +158,7 @@ class _BookingPageState extends State<BookingPage> {
                 ),
               const SizedBox(height: 24),
               Text("Pilih Tanggal",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: textColor)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textColor)),
               const SizedBox(height: 12),
               CalendarDatePicker(
                 initialDate: selectedDate,
@@ -181,10 +174,7 @@ class _BookingPageState extends State<BookingPage> {
               const SizedBox(height: 24),
 
               Text("Pilih Jam",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: textColor)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textColor)),
               const SizedBox(height: 12),
               GridView.count(
                 crossAxisCount: 4,
@@ -211,7 +201,9 @@ class _BookingPageState extends State<BookingPage> {
                                 : Colors.grey[800],
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isSelected ? primaryColor : (isLightMode ? Colors.grey.shade300 : Colors.grey.shade600),
+                          color: isSelected
+                              ? primaryColor
+                              : (isLightMode ? Colors.grey.shade300 : Colors.grey.shade600),
                           width: 1.5,
                         ),
                       ),
@@ -247,7 +239,7 @@ class _BookingPageState extends State<BookingPage> {
                   onPressed: () {
                     if (selectedService.isEmpty || selectedTime.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Silakan lengkapi data terlebih dahulu.")),
+                        const SnackBar(content: Text("Silakan lengkapi data terlebih dahulu.")),
                       );
                       return;
                     }
@@ -259,12 +251,11 @@ class _BookingPageState extends State<BookingPage> {
                           selectedService: selectedService,
                           doctorOnDuty: getDoctor(),
                           servicePrice: servicePrices[selectedService]!,
-                          selectedDate: selectedDate,  // kirim tanggal
+                          selectedDate: selectedDate,
                         ),
                       ),
                     );
                   },
-
                   child: const Text("Lanjutkan", style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ),
@@ -280,28 +271,19 @@ class _BookingPageState extends State<BookingPage> {
         onTap: (index) {
           switch (index) {
             case 0:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => Home()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Home()));
               break;
             case 1:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => BookingPage()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => BookingPage()));
               break;
             case 2:
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => MedicalHistoryPage()),
+                MaterialPageRoute(builder: (_) => MedicalHistoryPage(userId: userId ?? "")),
               );
               break;
             case 3:
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => OwnerProfilePage()),
-              );
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OwnerProfilePage()));
               break;
           }
         },
